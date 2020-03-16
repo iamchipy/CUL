@@ -1,4 +1,4 @@
-global WORKINGDIR := A_AppData "\ChipysUtilityLibrary"
+global ROAMING := A_AppData "\ChipysUtilityLibrary"
 global DEPS := DependencyManager.new()
 
 class NewHUD {
@@ -46,8 +46,8 @@ class Tool {
 		}
 
 		capture(){
-			current_working_dir := A_WorkingDir
-			this.area_coords := capture_image_region(WORKINGDIR "\temp_area")
+			current_working_dir := A_ROAMING
+			this.area_coords := capture_image_region(ROAMING "\temp_area")
 		}
 	}
 
@@ -72,6 +72,7 @@ class Tool {
 				MsgBox "The highlight tool only accepts coordinate pairs (1-point or 2-area) in array form "
 				Return 0
 			}
+
 			; dumping params
 			this.id := id
 			this.coords := coords
@@ -134,7 +135,7 @@ class Tool {
 				this._construct_crosshair_element(1,this.coords[1]-this.ch_b, this.coords[2]-this.ch_b2-this.ch_l, this.ch_s,this.ch_l)
 				this._construct_crosshair_element(2,this.coords[1]+this.ch_b2+this.ch_p, this.coords[2]-this.ch_b, this.ch_l,this.ch_s)
 				this._construct_crosshair_element(3,this.coords[1]-this.ch_b, this.coords[2]+this.ch_b2+this.ch_p, this.ch_s,this.ch_l)
-				this._construct_crosshair_element(2,this.coords[1]-this.ch_b2-this.ch_l, this.coords[2]-this.ch_b, this.ch_l,this.ch_s)
+				this._construct_crosshair_element(4,this.coords[1]-this.ch_b2-this.ch_l, this.coords[2]-this.ch_b, this.ch_l,this.ch_s)
 
 				if this.show_tile
 					this._construct_crosshair_element(5,this.coords[1]+(2*(x_size+dot)), this.coords[2]-(2*(y_size+(4*dot))), 2*y_size, 2*x_size, 1)
@@ -153,11 +154,10 @@ class Tool {
 			if this.show_tile
 				this.gui_handles[5].Destroy()
 			this.gui_handles[1].Destroy()
-			this.gui_handles[3].Destroy()
 			this.gui_handles[2].Destroy()
+			this.gui_handles[3].Destroy()
 			this.gui_handles[4].Destroy()
 		}
-
 	}
 }
 
@@ -256,8 +256,17 @@ class SenarioDetector {
 	}
 
 	show_coords(length_to_show:=1000, special_mode:=0){
-		if this.last_coords != 0 and this.type == "point"
-			this.hud_obj := tool.highlight.new(this.id, [this.last_coords[1], this.last_coords[2]],length_to_show)
+		if this.last_coords != 0 {
+			;id, coords, gui_color:="00FF00", duration:=500, show_tile:=0, coord_mode_to_use:="Screen", crosshair_size:=2
+			this.hud_obj := tool.highlight.new(this.id, [this.last_coords[1], this.last_coords[2]], this.color_mark, length_to_show)
+			this.hud_obj.show()
+			Return
+		}
+		if this.type == "image" {
+			this.hud_obj := tool.highlight.new(this.id, [this.x1, this.y1, this.x2, this.y2], this.color_mark, length_to_show)
+			this.hud_obj.show()
+		}
+
 
 		; 	;handles positive timer number so it never activates twice
 		; if length_to_show > 0
@@ -363,7 +372,10 @@ class SenarioDetector {
 	; 	}
 	; }
 
-	is_present(variation:=5){
+	is_present(variation:=-1){
+		if variation <0
+			variation := this.tol
+
 		this.last_coords := 0  ; reset to avoid false positive
 		if this.type == "image" {
 			this.last_coords := find_image(this.file_name,
@@ -371,7 +383,7 @@ class SenarioDetector {
 										   this.y1,
 										   this.x2,
 										   this.y2,
-										   this.tol)
+										   variation)
 			if this.last_coords != 0
 			{
 				this.x := this.last_coords[1]
@@ -414,26 +426,37 @@ class SenarioDetector {
 		this.age := a_tickcount - this.last_seen
 		Return this.age
 	}
+
 	class Img extends SenarioDetector{
-		__New(file_name, x1:=-1, y1:=-1, x2:=-1, y2:=-1, LocalTol:=100) {
+		__New(file_name, coords:=0, LocalTol:=100) {
 			;handles defaults
-			;debug MsgBox x1 ":" y1 "   " x2 ":" y2
-			(x1==-1)?(x1:=0):(x1:=x1) ;if x1 = none set to 0 else  leave it
-			(y1==-1)?(y1:=0):(y1:=y1)
-			(x2==-1)?(x2:=A_ScreenWidth):(x2:=x2)
-			(y2==-1)?(y2:=A_ScreenHeight):(y2:=y2)
-			;debug MsgBox x1 ":" y1 "   " x2 ":" y2
+			if !coords{
+				coords[1] := 0
+				coords[2] := 0
+				coords[3] := A_ScreenWidth
+				coords[4] := A_ScreenHeight
+			}
 
 			;debug ToolTip x2 " : " y2
 			this.file_name := file_name
-			this.x1 := x1
-			this.y1 := y1
-			this.x2 := x2
-			this.y2 := y2
+			this.id := StrSplit(file_name , ".")[1]
+			this.x1 := coords[1]
+			this.y1 := coords[2]
+			this.x2 := coords[3]
+			this.y2 := coords[4]
 			this.tol := LocalTol
 
 			this.type := "image"
 			this.showing_search_area := 0
+
+			if(!FileExist(file_name)){
+				MsgBox "no file detected for " file_name "`r`nPlease select it now"
+				this.capture_new_sample()
+			}
+		}
+
+		capture_new_sample(){
+			capture_image_region(this.file_name)
 		}
 	}
 	
@@ -489,17 +512,19 @@ class SenarioDetector {
 		}
 
 		class Ext extends SenarioDetector.pix {
-			__New(identifier,x1:=-1, y1:=-1, x2:=-1, y2:=-1, LocalTol:=5) {
+			__New(identifier,coords:=0, LocalTol:=5) {
 				;handles defaults
-				(x1<0)?(x1:=0):(x1:=x1) ;if x1 = none set to 0 else  leave it
-				(y1<0)?(y1:=0):(y1:=y1)
-				(x2<0)?(x2:=A_ScreenWidth):(x2:=x2)
-				(y2<0)?(y2:=A_ScreenHeight):(y2:=y2)
+				if !coords{
+					coords[1] := 0
+					coords[2] := 0
+					coords[3] := A_ScreenWidth
+					coords[4] := A_ScreenHeight
+				}
 
-				this.x1 := x1
-				this.y1 := y1
-				this.x2 := x2
-				this.y2 := y2
+				this.x1 := coords[1]
+				this.y1 := coords[2]
+				this.x2 := coords[3]
+				this.y2 := coords[4]
 				this.tol := LocalTol
 
 				this.type := "pixel_ext"
@@ -525,34 +550,74 @@ class DependencyManager {
 	__New(){
 		;incomplete system but being set up for future expansion into a lib tool
 		this.IRFV := 0
-		this.IRFV_files := ["/irfv/i_view64.exe",
-							"/irfv/i_view64.ini",
-							"/irfv/plugins/regioncapture.dll"]
+		this.IRFV_files := ["\irfv\i_view64.exe",
+							"\irfv\plugins\regioncapture.dll"]
+		this.IRFV_folders :=	["\irfv\plugins"]
+		this._create_folders(this.IRFV_folders)
+	}
+	_download_file(file_name){
+		download("https://github.com/sgmsm/CUL/raw/master" file_name, ROAMING file_name)
+	}
+	_create_folders(array){
+		loop array.Length{
+			if !DirExist(ROAMING array[A_Index]){
+				ToolTip ROAMING array[A_Index]
+				DirCreate(ROAMING array[A_Index])
+			}
+		}
 	}
 
-	check(mod_name){
-		if this.hasprop(mod_name) and this.%mod_name%
-			Return 1
+	check(mod_name, to_verify:=0, to_download:=0){
+		if this.hasprop(mod_name){
+				if this.%mod_name% and !to_verify{
+					Return 1
+				}else if to_verify or to_download{
+					this.verify(mod_name, to_download)
+				}
+			Return 0
+		}
+		MsgBox "it seems like you are searching for unknown mod: " mod_name
 		Return 0
 	}
 
-	verify(mod_name){
-		
-		MsgBox mod_name
-		temp := mod_name "_files"
-		MsgBox temp
-		mod_list := this.%mod_name%
-		
-		MsgBox this.IRFV_files[1]
-		loop this.%mod_name%.Length{
-			if(!FileExist(WORKINGDIR this.%mod_name%[A_Index])){
-				MsgBox "missing " WORKINGDIR this.%mod_name%[A_Index] " mod"
-				Return 0
+	verify(mod_name, force_download:= 0){
+		if force_download{
+			this.download(mod_name)
+			Return 1
+		}
+
+		loop this.%mod_name%_files.Length{
+			if(!FileExist(ROAMING this.%mod_name%_files[A_Index])){
+				try{
+					this._download_file(this.%mod_name%_files[A_Index])
+					ToolTip "downloading missing files for " mod_name " plugin"
+				}Catch e{
+					MsgBox "ERR downloading: " this.%mod_name%_files[A_Index]
+					Return 0
+				}
 			}
 		}
 		return 1
 	}
 
+	download(mod_name){
+		this.%mod_name% := 1  ; to save time in future we can jsut know it's been downloaded
+
+		this.download_bar := GuiCreate(,"Downloading " mod_name)
+		this.download_bar.opt("-caption")
+		this.download_bar.setfont("s14 bold", "open sans")
+		this.download_bar.addtext("","Downloading " mod_name)
+		this.download_bar.Add("Progress", "w200 h20 c00CCCC vMyProgress", 0)
+		this.download_bar.show()
+
+		number_of_file := this.%mod_name%_files.Length
+
+		loop number_of_file{
+			this._download_file(this.%mod_name%_files[A_Index])
+			this.download_bar["MyProgress"].Value += floor(100/number_of_file)
+		}
+		this.download_bar.Destroy()
+	}
 }
 
 
@@ -568,14 +633,15 @@ class DependencyManager {
 
 
 capture_image_region(file_name){
-	DEPS.verify("IRFV_files")
-	; capture_image_region(A_WorkingDir "\img\autoFood.png")
+	DEPS.verify("IRFV")
+
+	; capture_image_region(A_ROAMING "\img\autoFood.png")
 	; capture = 4 -> is Region capture mode
 	; returns [ARRAY] with region box using coords for start and finish of drag
-	run( "IRFV\i_view64.exe /capture=4 /jpgq=100 /convert=" file_name) 
-	KeyWait("Lbutton", "d")
+	runwait( ROAMING "\irfv\i_view64.exe /capture=4 /jpgq=100 /convert=" file_name) 
+	KeyWait("Lbutton")		
 	MouseGetPos(x1, y1)
-	KeyWait("Lbutton")
+	KeyWait("Lbutton")	
 	MouseGetPos(x2, y2)
 	Return [x1,y1,x2,y2]
 }
