@@ -6,63 +6,460 @@ global global_hud_obj1 := NewHUD.new(".",1)
 global global_hud_obj2 := NewHUD.new(". .",2)
 global global_hud_obj3 := NewHUD.new(". . .",3)
 
-
-;TODO add a check array for each entry to know if it's always active or only with ARK open
-class BindsManager {
-	;tool for handling hotkeys
-	;- functions include key conflict checks and gui to easily assign, save and load hotkeys
-
-	__New(list_of_function, file_name:=0, target_client_title:="A"){
-		; if !working_directory   ; 0 = use CUL's working dir in %appdata%
-		; 	this.wd:= ROAMING 			
-		; else if working_directory == 1  ;use running script's workingdir
-		; 	this.wd:=A_WorkingDir
-		; else 							;use custom working dir
-		; 	this.wd:=working_directory
-
-		if file_name  ;if has a custom file name use it
-			this.fn:=file_name 		
-		else   ;else use CUL's file name for inin
-			this.fn:=INI_FILE_NAME
-
-		this.functions := list_of_function				;used to create a list of functions to load and bind
-		this.filter_title := target_client_title		;used to do conditional hotkeys
-		this.keys := []
-		this.keys.Length := this.functions.Length 		;defines functions array to match hotkey list
-		this.gui_handle := []
-		this._protected_keys := []
-		this.auth:=0									;value to be filled later
-
-		this._load_from_ini()
-		this.bind_all_keys()
+;TODO build timer base threat manager
+class TimerThreadTool {
+	__new(){
+		this.bound_obj_map := map()
+		this.interval_map := map()
+		this.target_client_map := map()
 	}
 
-	_save_to_ini(){
-		;saves funtion and key lists to ini using global constant INI_FILE_NAME
-		loop this.functions.Length{
-			IniWrite(this.functions[A_Index], INI_FILE_NAME, "BindManager", "func" A_Index)
+	_add(){
+
+	}
+
+	_bind(){
+
+	}
+
+	start(){
+
+	}
+
+	stop(){
+
+	}
+}
+
+; ;TODO add a check array for each entry to know if it's always active or only with ARK open
+; class BindsManager {
+; 	;tool for handling hotkeys
+; 	;- functions include key conflict checks and gui to easily assign, save and load hotkeys
+
+; 	__New(list_of_function, file_name:=0, target_client_title:="A"){
+; 		; if !working_directory   ; 0 = use CUL's working dir in %appdata%
+; 		; 	this.wd:= ROAMING 			
+; 		; else if working_directory == 1  ;use running script's workingdir
+; 		; 	this.wd:=A_WorkingDir
+; 		; else 							;use custom working dir
+; 		; 	this.wd:=working_directory
+
+; 		if file_name  ;if has a custom file name use it
+; 			this.fn:=file_name 		
+; 		else   ;else use CUL's file name for inin
+; 			this.fn:=INI_FILE_NAME
+
+; 		this.functions := list_of_function				;used to create a list of functions to load and bind
+; 		this.filter_title := target_client_title		;used to do conditional hotkeys
+; 		this.keys := []
+; 		this.keys.Length := this.functions.Length 		;defines functions array to match hotkey list
+; 		this.gui_handle := []
+; 		this._protected_keys := []
+; 		this.auth:=0									;value to be filled later
+
+; 		this._load_from_ini()
+; 		this.bind_all_keys()
+; 	}
+
+; 	_save_to_ini(){
+; 		;saves funtion and key lists to ini using global constant INI_FILE_NAME
+; 		loop this.functions.Length{
+; 			IniWrite(this.functions[A_Index], INI_FILE_NAME, "BindManager", "func" A_Index)
+; 		}
+; 		loop this.keys.Length{
+; 			IniWrite(this.keys[A_Index], INI_FILE_NAME, "BindManager", "key" A_Index)
+; 		}		
+; 	}
+
+; 	_load_from_ini(){
+; 		;loads key list from ini using global constant INI_FILE_NAME
+; 		loop this.functions.Length{
+; 			this.keys[A_Index]:= iniread( INI_FILE_NAME, "BindManager", "key" A_Index)
+; 		}		
+; 	}
+
+; 	_bind(key_name, func_name, situational:= 0){
+; 		try{
+; 			if !key_name{	;if keyname is non it means disable
+; 				hotkey "if"
+; 				Hotkey "~!#1", func_name, "off"
+; 				Return 1	;return success as unbound
+; 			}
+; 			;if situational hotkey trigger only in app else set to always
+; 			((situational)?(hotkey "ifwinactive", this.filter_title):(hotkey "if"))
+; 			Hotkey key_name, func_name
+; 			Return 1		;return success as bound
+; 		}catch e{
+; 			if ErrorLevel == 1 or e.Message == "Parameter #2 invalid."{
+; 				MsgBox "Could not bind '" func_name "' to the [" key_name "] key.`r`n'" func_name "()' does not exist.", "Keybinding error!", 48
+; 				Return 0
+; 			}else if ErrorLevel == 2{
+; 				MsgBox key_name " is not a valid hotkey recognized by this system", "Keybinding error!", 48
+; 				Return 0
+; 			}
+; 			;Exception(Message , What, Extra) {file\line}
+; 			MsgBox("err: " e.Message, "Keybinding error!", 48)
+; 		}
+; 	}
+
+; 	bind_all_keys(){
+; 		; static license_obj assuming it exists
+; 		; if !this.auth{
+; 		; 	if DEBUG
+; 		; 		ToolTip "failed auth"
+; 		; 	; Return
+; 		; 	MsgBox "Please register C2 to enable key-binding"
+; 		; 	Return 0				
+; 		; }
+; 		loop this.functions.Length{
+; 			this._bind(this.keys[A_Index], this.functions[A_Index])
+; 		}
+; 	}
+
+; 	gui_open(){
+; 		this.gui := GUICreate(" -MinimizeBox","Keybind Manager")
+; 		loop this.functions.Length{
+; 			this.gui.Add("text", "xm" ,this.functions[A_Index])
+; 			this.gui_handle.%this.functions[A_Index]% := this.gui.Add("hotkey", "xp+170  v" this.functions[A_Index], this.keys[A_Index])
+; 			this.gui_handle.%this.functions[A_Index]%.OnEvent("change",(obj_of_event,*)=> this.on_change(obj_of_event))
+; 		}
+; 		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save())
+; 		this.gui_button_reset := this.gui.add("button","xp+150","Reset").OnEvent("click",(*)=> this.gui_reset())
+; 		this.Gui.OnEvent("Escape", (*)=> this.gui_close())
+; 		this.gui.OnEvent("Close", (*)=> this.gui_close()) 
+; 		this.gui.show()
+; 		Suspend "on" 	;to allow rebinding of hotkeys
+; 	}
+
+; 	gui_save(args*){
+; 		Suspend "off"
+; 		this.gui_data := this.gui.submit()
+; 		loop this.functions.Length{
+; 			this.keys[A_Index] := this.gui_data.%this.functions[A_Index]%
+; 		}
+; 		this._save_to_ini()
+; 		this.bind_all_keys()
+; 	}
+
+; 	gui_close(){
+; 		Suspend "off"
+; 		this.gui.Destroy()
+; 	}
+
+; 	gui_reset(){
+; 		this.keys := []
+; 		this.keys.Length := this.functions.Length
+; 		this.gui_close()
+; 		This.gui_open()
+; 	}
+
+; 	on_change(obj_of_event){
+; 		if this.does_conflict(obj_of_event.value){
+; 			if DEBUG
+; 				ToolTip obj_of_event.value " conflicts with "  this.does_conflict(obj_of_event.value)
+; 		}
+; 	}
+
+; 	does_conflict(key_to_check){
+; 		;checks for conflicts in existing keybinds or reserved hotkeys 
+; 		;returns 0 if no conflicts
+; 		;returns INT of coflicting index in the this.functions[] List
+; 		;retunrn STRING if conflicting with reserved key
+; 		if key_to_check == ""
+; 			Return 0
+
+; 		loop this._protected_keys.Length{
+; 			if key_to_check == this._protected_keys[A_Index]{
+; 				MsgBox key_to_check " is a reserved/protected key"
+; 				Return this._protected_keys[A_Index]
+; 			}
+; 		}
+
+; 		loop this.keys.Length{
+; 			if key_to_check == this.keys[A_Index]{
+; 				MsgBox key_to_check " is already assigned to " this.functions[A_Index] "`n`nBe careful with overlapping hotkeys"
+; 				Return A_Index
+; 			}
+; 		}
+; 		Return 0
+; 	}
+; }
+; ;TODO Combind hot and settings managesr with sub class for each prob and just do array of settings
+; class SettingsManager {
+; 	__new(file_name:=0, custom_section:=0){
+; 		; , working_directory:=0
+; 		; if !working_directory   ; 0 = use CUL's working dir in %appdata%
+; 		; 	this.wd:= ROAMING 			
+; 		; else if working_directory == 1  ;use running script's workingdir
+; 		; 	this.wd:=A_WorkingDir
+; 		; else 							;use custom working dir
+; 		; 	this.wd:=working_directory
+
+; 		if file_name  ;if has a custom file name use it
+; 			this.fn:=file_name 		
+; 		else   ;else use CUL's file name for inin
+; 			this.fn:=INI_FILE_NAME
+; 		;sets default for custom section is != 0
+; 		((custom_section)?(this.section:=custom_section):(this.section:="SettingsManager"))
+
+; 		this.value := map()		;map of settings in dict/map form for easy of saving, loading, and recall
+; 		this.map_alt := map()	;map that supports .value[] info about item's settings type
+; 		this.map_clean := map()	;map that supports .value[] 1/0 about if ini should be cleaned if blank
+; 		this.info := map()		;map that supports .value[] dict with info about the given setting
+; 		this.default := map()	;map that supports .value[] dict with defaults to compare to
+; 		this.load_all()
+; 	}
+
+; 	info(gui_obj){
+; 		try{
+; 			MsgBox this.info[substr(gui_obj.Name,5)], "About " gui_obj.Name 	;simple wrapper for info popup with key's info map data
+; 		}catch e{
+; 			;any exeption will result in default no-info-msgbox
+; 			MsgBox "Sorry, no info avaliable for " substr(gui_obj.Name,5), "Missing Info"
+; 		}
+; 	}	
+
+; 	gui_add(){
+; 		;create a large window with all possible settings
+; 		this.gui := GUICreate(" -MinimizeBox","Settings Manager")
+; 		this.gui.Add("edit", "xm w95 vnewkey" ,"key")
+; 		this.gui.Add("edit", "xp+100 w200 vnewvalue", "value")
+; 		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save_one())
+; 		this.gui.show()
+; 	}
+
+; 	gui_open(){
+; 		try			;checks if gui object exists and closes incase double opening
+; 			this.gui.Destroy()
+
+; 		;create a large window with all possible settings
+; 		this.gui := GUICreate(" -MinimizeBox","Settings Manager")
+; 		for key, value in this.value{			;loop for each setting in the obj map[]
+; 			if InStr(key, "toggle")			;if it's a "toggle" setting skip it because it has a master
+; 				Continue
+; 			this.gui.Add("text", "xm" ,key)
+; 			this.gui.Addbutton("xp+180 vinfo" key ,"?").onEvent("click", (gui_obj,*)=>this.info(gui_obj))
+; 			if !this.map_alt.has(key)		;if this settings is NOT of "alt" type no normal string input
+; 				this.gui.Add("edit", "xp+30 w200 v" key, value)
+; 			else 							;else do more complex building
+; 				if this.map_alt[key] = "checkbox"
+; 					this.gui.Add(this.map_alt[key], "xp+30 w200 v" key " checked" value, "default: " this.default[key])
+; 				else 
+; 					this.gui.Add(this.map_alt[key], "xp+30 w200 v" key , value)
+			
+			
+; 			if this.value.has("toggle_" key)   ;check if the map has a value
+; 				this.gui.Add("Checkbox", "xp+230 vToggle_" key " checked" this.value["toggle_" key], "Enabled")
+; 		}
+; 		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save())
+; 		this.Gui.OnEvent("Escape", (*)=> this.gui_close())
+; 		this.gui.OnEvent("Close", (*)=> this.gui_close()) 
+; 		this.gui.show()
+; 	}
+
+; 	gui_save(args*){
+; 		this.gui_data := this.gui.submit()	;dumps current state of GUI to an object
+; 		for key, value in this.value{		;enumerates the entire dict as an easy way of not missing anything
+; 			this.%value% := this.gui_data.%key%   ;sets the object's prob value
+; 			this.value[key] := this.%value% 		;also sets the dict/map's value to be updated
+; 		}
+; 		this.save_all()
+; 	}
+
+; 	gui_save_one(){
+; 		this.gui_data := this.gui.submit()	;dumps current state of GUI to an object
+; 		this.value[this.gui_data.newkey] := this.gui_data.newvalue
+; 		this.save_all()
+; 	}
+
+; 	gui_close(){
+; 		this.gui.Destroy()
+; 	}
+
+; 	ini(key, delete_if_blank:=0, default_value:=0, non_string_type:=0, info:=''){
+; 		this.default[key] := default_value
+; 		this.value[key] := this._load(key, default_value, )	;loads value from ini if it doesn't exist it uses default value
+; 		this.info[key] := info 								;sets the info str for this setting/key
+; 		if non_string_type
+; 			this.map_alt[key] := non_string_type
+; 		if delete_if_blank
+; 			this.map_clean[key] := delete_if_blank
+; 	}
+
+; 	_save(key,value){
+; 		if this.map_clean.has(key) and this.default.has(key)	;if there is info for this item in ansillary arrays
+; 			if value == this.default[key] and this.map_clean[key]{	;checks if this is both a to-clean setting and if it is still default
+; 				IniDelete this.fn, this.section, Key
+; 				Return
+; 			}
+; 		IniWrite Value,  this.fn, this.section, Key
+; 	}
+
+; 	_load(key, default_value:="", non_map:=0){
+; 		temp_value := iniread(this.fn, this.section, key, default_value)
+; 		if non_map								;to avoid loading this.str_of_keys into the dict/map for no reason
+; 			Return
+; 		;moved out of .load() v205 this.value[key] := temp_value  			;load value into dict/map
+; 		Return temp_value
+
+; 		; ;checks for if this settings has an associated toggle
+; 		; has_toggle := iniread(this.fn, "SettingsManager", "toggle_" key, default_value)
+; 		; if has_toggle
+; 		; 	this.map_t[key] := has_toggle
+; 	}	
+
+; 	load_all(){
+; 		this.str_of_keys := iniread(this.fn, "SettingsManager", "str_of_keys")	;manual read of expected items to load/read
+; 		this.list_of_keys := strsplit(this.str_of_keys, "|") 					;splits string of keys into an ARRAY
+; 		loop this.list_of_keys.Length{   									;loops for each item in the list, loading it's content
+; 			key := this.list_of_keys[A_Index]								;set key 
+; 			this.value[key] := this._load(key)							;load each entry
+; 		}
+; 	}
+
+; 	save_all(){
+; 		this.list_of_keys := []  		; used to save the "names" of variables to load back out on fresh boot
+; 		this.str_of_keys :=""			; used to store the list of keys in a single string for saving
+; 		for key, value in this.value{		; loop for each key-pair in the dict/map of settings
+; 			this._save(key,value)
+; 			this.list_of_keys.push(key)
+; 		}
+
+; 		loop this.list_of_keys.Length{    ;loops to concant all keys into a string for saving
+; 			this.str_of_keys .= this.list_of_keys[A_Index]
+; 			if A_Index < this.list_of_keys.Length 			;checks if this is the last entry
+; 				this.str_of_keys .=  "|"					;if it isn't we add a delimiter
+; 		}
+; 		this._save("str_of_keys", this.str_of_keys)
+; 	}
+; }
+
+class ConfigEntry {
+	__new(key,c_section,fn,c_type:=0,accessories:=0,default_value:=0,delete_if_blank:=0,info:=''){
+		;value = base entry's value 
+		;section = ini section 
+		;type = main entry's value/input type 
+		;accessories = array of flags for assisting options [checkbox/toggle]
+
+		;defaults
+		this.value := 0
+		this.toggle := 0
+		this.pipelist:= ""						;creates a pipe-separated-list for DropDownList
+
+		;load values
+		this.key := key
+		this.section := c_section 								;ini section 
+		this.fn := fn 											;file name of config ini
+		((c_type)?(this.type:=c_type):(this.type:="edit"))
+		this.default := default_value
+		this.to_clean := delete_if_blank
+		this.info := info
+
+		this.acc := accessories
+		this.has_toggle := 0		
+		if type(this.acc) = "array"	{						;check if it's an array
+			if this.type = "DropDownList" {					;if this entry is a list, the accessory is the data
+				loop this.acc.Length{							;loop for all items in the list
+					this.pipelist .= this.acc[A_Index]			;adds item
+					if a_index < this.acc.Length 				;if this isn't the last item add a pipe
+						this.pipelist .= "|"
+				}		
+			}else{ 											;all other types get default system
+				loop this.acc.Length{							;loop for all accessories in array
+					if instr(this.acc[A_Index],"*") 			;check if this item has '*' mean it's a default for the previous item
+						this.has_%this.acc[A_Index-1]%_default := SubStr(this.acc[A_Index], 2 )
+					else
+						this.has_%this.acc[A_Index]% := 1
+				}
+			}
+		}else if type(this.acc) = "string"{				;assumes it's to be used as is in list prop 
+			this.pipelist:= this.acc					;creates a pipe-separated-list
 		}
-		loop this.keys.Length{
-			IniWrite(this.keys[A_Index], INI_FILE_NAME, "BindManager", "key" A_Index)
-		}		
+		this._load()
+	}
+	_save(){
+		if this.value = this.default{						;if we have a value stored and it isn't the default
+			if this.to_clean{								;if this is one to delete when it's the default value
+				IniDelete this.fn, this.section, this.Key 	;clears ini value and key out 
+				if type(this.acc) = "array"					;if accessories prop is array AKA multiple items
+					for item in this.acc 					;loops for items in map
+						IniDelete this.fn, this.section, this.Key "_" item	;clears ini for each item
+				else 										;else just use as is
+					IniDelete this.fn, this.section, this.Key "_" this.acc	;clears ini value and key out 
+				Return 										;escapes and doesn't save a the value
+			}
+		}	
+		;if we got this far then this should be a normal scenario and we should save the value
+		IniWrite this.value, this.fn, this.section, this.key
+		if this.hasprop("has_toggle_default")
+			IniWrite this.toggle, this.fn, this.section, this.key "_toggle"
 	}
 
-	_load_from_ini(){
-		;loads key list from ini using global constant INI_FILE_NAME
-		loop this.functions.Length{
-			this.keys[A_Index]:= iniread( INI_FILE_NAME, "BindManager", "key" A_Index)
-		}		
+	_load(){
+		this.value := iniread(this.fn, this.section, this.key, this.default)		;load key's value from ini
+		;check if there is a default present for for the toggle accessory
+		if this.hasprop("has_toggle_default")
+			this.toggle := iniread(this.fn, this.section, this.key "_toggle", this.has_toggle_default )		;load key's toggle state from ini
+	}	
+
+	ToString(){
+		try
+			Return "ConfigEntry(k:" this.key  ")(v:" this.value ")"
+		catch
+			return "ConfigEntry(ERROR key type =" type(this.key) " v=" type(this.value) ")"
+	}
+}
+
+class ConfigManagerTool {
+	__new(file_name:=0, custom_section:=0, client_name:=0){
+
+		;sets default for custom section is != 0
+		((file_name)?(this.fn:=file_name):(this.fn:=INI_FILE_NAME))					;accepts custom name or uses normal
+		((custom_section)?(this.section:=custom_section):(this.section:="ConfigManager"))
+		((client_name)?(this.client_name:=client_name):(this.client_name:=WinActive("A")))
+		this.gui_size_limit_height := 20
+
+		this.c := map()		;map of settings in dict/map form for easy of saving, loading, and recall
+		this.c2 := map()	;secondary map of settings in dict/map form for easy of saving, loading, and recall
+		this._protected_keys := []	;list of currently used keys
+		this.section_alt := this.section "_alt"
+
+		this.load_all()
 	}
 
-	_bind(key_name, func_name, situational:= 0){
+	info(gui_obj, assist:=""){
+		try{
+			MsgBox this.c%assist%[substr(gui_obj.Name,5)].info, "About " gui_obj.Name 	;simple wrapper for info popup with key's info map data
+		}catch e{
+			;any exeption will result in default no-info-msgbox
+			MsgBox "Sorry, no info avaliable for " substr(gui_obj.Name,5), "Missing Info"
+		}
+	}	
+
+	_unbind(key_name,func_name:=""){
+		try{
+			; if DEBUG
+			; 	ToolTip "unbind " key_name " from doing " func_name
+			Hotkey key_name, "off"
+		}
+	}
+	
+	_bind(key_name, func_name, always_on:= 0){
 		try{
 			if !key_name{	;if keyname is non it means disable
 				hotkey "if"
 				Hotkey "~!#1", func_name, "off"
 				Return 1	;return success as unbound
 			}
-			;if situational hotkey trigger only in app else set to always
-			((situational)?(hotkey "ifwinactive", this.filter_title):(hotkey "if"))
+
+			if DEBUG 
+				MsgBox "binding " key_name " to " func_name " always: " always_on
+			;if always_on hotkey trigger only in app else set to always
+
+			hotkey "ifwinactive", this.client_name		;make all hotkeys only work IN-CLIENT only by default
+			if always_on 								;if we indicate to always work, only then do we clear the inf
+				hotkey "if" 							;set hotkey to always work
+
 			Hotkey key_name, func_name
 			Return 1		;return success as bound
 		}catch e{
@@ -78,43 +475,143 @@ class BindsManager {
 		}
 	}
 
-	bind_all_keys(){
-		; static license_obj assuming it exists
-		; if !this.auth{
-		; 	if DEBUG
-		; 		ToolTip "failed auth"
-		; 	; Return
-		; 	MsgBox "Please register C2 to enable key-binding"
-		; 	Return 0				
-		; }
-		loop this.functions.Length{
-			this._bind(this.keys[A_Index], this.functions[A_Index])
+	bind_all_keys(){ ;discontinuted
+		for key, obj in this.c{
+			try{
+				if obj.type = "hotkey"
+					this._bind(obj.value, key, obj.toggle)
+			}catch e{
+				CULErrorHandler.new(e,"Encounterd possible faulty/old ini keybind entry: '" key "' will now attempt to heal the error")
+				IniDelete this.fn, this.section , key
+			}
 		}
 	}
 
-	gui_open(){
-		this.gui := GUICreate(" -MinimizeBox","Keybind Manager")
-		loop this.functions.Length{
-			this.gui.Add("text", "xm" ,this.functions[A_Index])
-			this.gui_handle.%this.functions[A_Index]% := this.gui.Add("hotkey", "xp+170  v" this.functions[A_Index], this.keys[A_Index])
-			this.gui_handle.%this.functions[A_Index]%.OnEvent("change",(obj_of_event,*)=> this.on_change(obj_of_event))
-		}
-		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save())
-		this.gui_button_reset := this.gui.add("button","xp+150","Reset").OnEvent("click",(*)=> this.gui_reset())
-		this.Gui.OnEvent("Escape", (*)=> this.gui_close())
-		this.gui.OnEvent("Close", (*)=> this.gui_close()) 
+	gui_add(){
+		;create a large window with all possible settings
+		this.gui := GUICreate(" -MinimizeBox","Settings Manager")
+		this.gui.Add("edit", "xm w95 vnewkey" ,"key")
+		this.gui.Add("edit", "xp+100 w200 vnewvalue", "value")
+		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save_one())
 		this.gui.show()
-		Suspend "on" 	;to allow rebinding of hotkeys
+	}
+
+	gui_open(){	
+		Suspend "on"
+		try			;checks if gui object exists and closes incase double opening
+			this.gui.Destroy()
+
+		try{
+			;create a large window with all possible settings
+			this.gui := GUICreate(" -MinimizeBox",this.section)
+			for key, obj in this.c2{				;loop for each setting in the obj map[]
+				;title
+				this.gui.Add("text", "xm", strUpper(StrReplace(key, "_" , " "),"T"))
+
+				;help/discription buttons
+				this.gui.Addbutton("xp+180 vinfo" key,"?").onEvent("click", (gui_obj,*)=>this.info(gui_obj,"2"))
+
+				;main value item 
+				if obj.type = "checkbox"
+					this.gui.Add(obj.type, "xp+30 w200 v" key " checked" obj.value, "default: " obj.default)
+				if obj.type = "edit" or obj.type = "hotkey"
+					this.gui.Add(obj.type, "xp+30 w200 v" key, obj.value)
+				if obj.type = "DropDownList"{
+					temp:= this.gui.Add(obj.type, "lowercase altsubmit xp+30 w200 v" key " choose" obj.value, "none||" obj.pipelist)
+					temp.OnEvent("change",(obj_of_event,*)=> this.gui_apply_preset(obj_of_event))
+				}
+
+				;add ons 
+				if obj.has_toggle
+					this.gui.Add("Checkbox", "xp+230 v" key "_toggle checked" obj.toggle, "Enabled")
+			}
+
+			;now add normal items
+			for key, obj in this.c{				;loop for each setting in the obj map[]
+
+				;checks if entry in ini is something we know whwat to do with our how to handle
+				if type(obj) != "ConfigEntry"{	;no longer treating as an error by just a text field
+					; msgbox "Encounterd possible faulty/old ini setting entry: '" key "' and will now attempt to self-correct"
+					; IniDelete this.fn, this.section , key
+					if DEBUG 
+						msgbox "Encounterd possible faulty/old ini setting entry: '" key "' NEEDS TO BE REMOVED FROM config.ini"
+					Continue
+				}
+
+				;title
+				this.gui.Add("text", "xm", strUpper(StrReplace(key, "_" , " "),"T"))			
+
+				if DEBUG 
+					tooltip "gui_open`nkey: " string(key) "`nobj: " string(obj)
+
+				;help/discription buttons
+				this.gui.Addbutton("xp+180 vinfo" key,"?").onEvent("click", (gui_obj,*)=>this.info(gui_obj))
+
+				;main value item 
+				if obj.type = "edit" 
+					this.gui.Add(obj.type, "xp+30 w200 v" key, obj.value)			
+				if obj.type = "checkbox"
+					this.gui.Add(obj.type, "xp+30 w200 v" key " checked" obj.value, "default: " obj.default)
+				if obj.type = "hotkey"
+					this.gui.Add(obj.type, "xp+30 w200 v" key, obj.value).OnEvent("change",(obj_of_event,*)=> this.on_change(obj_of_event))
+
+				;add ons 
+				if obj.has_toggle
+					this.gui.Add("Checkbox", "xp+230 v" key "_toggle checked" obj.toggle, "Enabled")
+			}
+
+			this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save())
+			this.gui_button_reset := this.gui.add("button","xp+150","Reset").OnEvent("click",(*)=> this.gui_reset())		
+			this.Gui.OnEvent("Escape", (*)=> this.gui_close())
+			this.gui.OnEvent("Close", (*)=> this.gui_close()) 
+			this.gui.show()
+		}catch e{
+			CULErrorHandler.new(e,"UNKNOWN gui error opening '" this.section "' section ' (key is at bottom of this msg)")
+		}
 	}
 
 	gui_save(args*){
 		Suspend "off"
-		this.gui_data := this.gui.submit()
-		loop this.functions.Length{
-			this.keys[A_Index] := this.gui_data.%this.functions[A_Index]%
+		this.gui_data := this.gui.submit()					;dumps current state of GUI to an object
+		for key, value in this.gui_data.OwnProps(){			;enumerates the entire dict as an easy way of not missing anything
+
+			;skips toggle accessories
+			if instr(key,"_toggle")
+				Continue
+
+			;case special cases in map "c2"
+			if this.c2.has(key){
+				this.c2[key].value := value 
+				disp("skipping " key)
+				Continue
+			}
+			
+			;hotkey unbind before assigning a new value to be bound
+			if this.c[key].type = "hotkey" {								;if this is a hotkey
+				if this.c[key].value != value or this.c[key].toggle != this.gui_data.%key%_toggle{
+					this._unbind(this.c[key].value)								;unbind previous value(key)
+					if value {													;if there is a new value from gui, bind it
+						this._bind(value, key, this.gui_data.%key%_toggle)			
+					}
+				}
+			}
+
+			;checks if there is an accessories that needs updating
+			if this.c[key].has_toggle								
+				this.c[key].toggle := this.gui_data.%key%_toggle 
+			;base functionality of applying variable's value
+			this.c[key].value := value
 		}
-		this._save_to_ini()
-		this.bind_all_keys()
+
+		this.save_all()
+		; this.bind_all_keys()
+	}
+
+	gui_save_one(){
+		this.gui_data := this.gui.submit()	;dumps current state of GUI to an object
+		; this.value[this.gui_data.newkey] := this.gui_data.newvalue
+		; this.save_all()
+		this._save(this.gui_data.newkey,this.gui_data.newvalue)
 	}
 
 	gui_close(){
@@ -123,10 +620,32 @@ class BindsManager {
 	}
 
 	gui_reset(){
-		this.keys := []
-		this.keys.Length := this.functions.Length
+		if MsgBox( "Are you sure you want to reset ALL saved data?",,1+48+256) != "OK"
+			Return
 		this.gui_close()
+		for key, obj in this.c
+			obj.value := ""
 		This.gui_open()
+	}
+
+	gui_apply_preset(obj_of_event){
+		if DEBUG
+			MsgBox this.c2["preset"].value "->" obj_of_event.value "(" obj_of_event.Text ")"
+
+		;sets preset map entry's value
+		this.c2["preset"].value := obj_of_event.value
+
+		for key, obj in this.c{				;loop for all options
+			obj.value := 0					;start by making all unchecked as a base
+			if obj_of_event.value = 1		;handles the 'none' preset
+				Continue
+			if key != obj_of_event.Text 	;then if text isn't the preset item's match 
+				obj.value := 1				;check all items not matching
+		}
+
+		;new reboot the gui for an easy way to apply preset
+		this.gui_close()
+		this.gui_open()		
 	}
 
 	on_change(obj_of_event){
@@ -151,173 +670,104 @@ class BindsManager {
 			}
 		}
 
-		loop this.keys.Length{
-			if key_to_check == this.keys[A_Index]{
-				MsgBox key_to_check " is already assigned to " this.functions[A_Index] "`n`nBe careful with overlapping hotkeys"
+		for key, obj in this.c{
+			if key_to_check == obj.value{
+				MsgBox key_to_check " is already assigned to " key "`n`nBe careful with overlapping hotkeys"
 				Return A_Index
 			}
 		}
 		Return 0
 	}
-}
-;TODO Combind hot and settings managesr with sub class for each prob and just do array of settings
-class SettingsManager {
-	__new(file_name:=0, custom_section:=0){
-		; , working_directory:=0
-		; if !working_directory   ; 0 = use CUL's working dir in %appdata%
-		; 	this.wd:= ROAMING 			
-		; else if working_directory == 1  ;use running script's workingdir
-		; 	this.wd:=A_WorkingDir
-		; else 							;use custom working dir
-		; 	this.wd:=working_directory
 
-		if file_name  ;if has a custom file name use it
-			this.fn:=file_name 		
-		else   ;else use CUL's file name for inin
-			this.fn:=INI_FILE_NAME
-		;sets default for custom section is != 0
-		((custom_section)?(this.section:=custom_section):(this.section:="SettingsManager"))
-
-		this.value := map()		;map of settings in dict/map form for easy of saving, loading, and recall
-		this.map_alt := map()	;map that supports .value[] info about item's settings type
-		this.map_clean := map()	;map that supports .value[] 1/0 about if ini should be cleaned if blank
-		this.info := map()		;map that supports .value[] dict with info about the given setting
-		this.default := map()	;map that supports .value[] dict with defaults to compare to
-		this.load_all()
-	}
-
-	info(gui_obj){
-		try{
-			MsgBox this.info[substr(gui_obj.Name,5)], "About " gui_obj.Name 	;simple wrapper for info popup with key's info map data
-		}catch e{
-			;any exeption will result in default no-info-msgbox
-			MsgBox "Sorry, no info avaliable for " substr(gui_obj.Name,5), "Missing Info"
-		}
-	}	
-
-	gui_add(){
-		;create a large window with all possible settings
-		this.gui := GUICreate(" -MinimizeBox","Settings Manager")
-		this.gui.Add("edit", "xm w95 vnewkey" ,"key")
-		this.gui.Add("edit", "xp+100 w200 vnewvalue", "value")
-		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save_one())
-		this.gui.show()
-	}
-
-	gui_open(){
-		try			;checks if gui object exists and closes incase double opening
-			this.gui.Destroy()
-
-		;create a large window with all possible settings
-		this.gui := GUICreate(" -MinimizeBox","Settings Manager")
-		for key, value in this.value{			;loop for each setting in the obj map[]
-			if InStr(key, "toggle")			;if it's a "toggle" setting skip it because it has a master
-				Continue
-			this.gui.Add("text", "xm" ,key)
-			this.gui.Addbutton("xp+180 vinfo" key ,"?").onEvent("click", (gui_obj,*)=>this.info(gui_obj))
-			if !this.map_alt.has(key)		;if this settings is NOT of "alt" type no normal string input
-				this.gui.Add("edit", "xp+30 w200 v" key, value)
-			else 							;else do more complex building
-				if this.map_alt[key] = "checkbox"
-					this.gui.Add(this.map_alt[key], "xp+30 w200 v" key " checked" value, "default: " this.default[key])
-				else 
-					this.gui.Add(this.map_alt[key], "xp+30 w200 v" key , value)
-			
-			
-			if this.value.has("toggle_" key)   ;check if the map has a value
-				this.gui.Add("Checkbox", "xp+230 vToggle_" key " checked" this.value["toggle_" key], "Enabled")
-		}
-		this.gui_button_save := this.gui.add("button","xm","Save").OnEvent("click",(*)=> this.gui_save())
-		this.Gui.OnEvent("Escape", (*)=> this.gui_close())
-		this.gui.OnEvent("Close", (*)=> this.gui_close()) 
-		this.gui.show()
-	}
-
-	gui_save(args*){
-		this.gui_data := this.gui.submit()	;dumps current state of GUI to an object
-		for key, value in this.value{		;enumerates the entire dict as an easy way of not missing anything
-			this.%value% := this.gui_data.%key%   ;sets the object's prob value
-			this.value[key] := this.%value% 		;also sets the dict/map's value to be updated
-		}
-		this.save_all()
-	}
-
-	gui_save_one(){
-		this.gui_data := this.gui.submit()	;dumps current state of GUI to an object
-		this.value[this.gui_data.newkey] := this.gui_data.newvalue
-		this.save_all()
-	}
-
-	gui_close(){
-		this.gui.Destroy()
-	}
-
-	ini(key, delete_if_blank:=0, default_value:=0, non_string_type:=0, info:=''){
-		this.default[key] := default_value
-		this.value[key] := this._load(key, default_value, )	;loads value from ini if it doesn't exist it uses default value
-		this.info[key] := info 								;sets the info str for this setting/key
-		if non_string_type
-			this.map_alt[key] := non_string_type
-		if delete_if_blank
-			this.map_clean[key] := delete_if_blank
-	}
-
-	_save(key,value){
-		if this.map_clean.has(key) and this.default.has(key)	;if there is info for this item in ansillary arrays
-			if value == this.default[key] and this.map_clean[key]{	;checks if this is both a to-clean setting and if it is still default
-				IniDelete this.fn, this.section, Key
-				Return
+	wrong_type_handler(key, value := 0, alt_map:=""){
+		if DEBUG
+			ToolTip "WTH:`nhas: " this.c%alt_map%.has(key) " `nkey: " string(key) "(" type(key) ")`nvalue: " string(value) "(" type(value) ")"  , , 500, 5
+		
+		if !alt_map{
+			if !this.c.has(key){
+				this.c[key] := ConfigEntry.New(key, this.section, this.fn)
+				if DEBUG
+					ToolTip "WTH:`NEW: " this.c.has(key) " `nkey: " string(key) "(" type(key) ")`nvalue: " string(value) "(" type(value) ")"  , , 600, 6
 			}
-		IniWrite Value,  this.fn, this.section, Key
+		}else{
+			if !this.c2.has(key){
+				this.c2[key] := ConfigEntry.New(key, this.section, this.fn)
+				if DEBUG
+					ToolTip "WTH:`NEW-alt: " this.c2.has(key) " `nkey: " string(key) "(" type(key) ")`nvalue: " string(value) "(" type(value) ")"  , , 600, 6
+			}			
+		}
 	}
 
-	_load(key, default_value:="", non_map:=0){
-		temp_value := iniread(this.fn, this.section, key, default_value)
-		if non_map								;to avoid loading this.str_of_keys into the dict/map for no reason
-			Return
-		;moved out of .load() v205 this.value[key] := temp_value  			;load value into dict/map
-		Return temp_value
-
-		; ;checks for if this settings has an associated toggle
-		; has_toggle := iniread(this.fn, "SettingsManager", "toggle_" key, default_value)
-		; if has_toggle
-		; 	this.map_t[key] := has_toggle
-	}	
+	ini(key, delete_if_blank:=0, default_value:=0, ctr_type:="edit", info:='',accessories:=0){
+		if ctr_type = "DropDownList"{
+			this.c2[key]:=ConfigEntry.New(	key,
+											this.section_alt,
+											this.fn,
+											ctr_type,
+											accessories,
+											default_value,
+											delete_if_blank,
+											info)
+		}else{
+			this.c[key]:=ConfigEntry.New(	key,
+											this.section,
+											this.fn,
+											ctr_type,
+											accessories,
+											default_value,
+											delete_if_blank,
+											info)
+		}
+	}
 
 	load_all(){
-		this.str_of_keys := iniread(this.fn, "SettingsManager", "str_of_keys")	;manual read of expected items to load/read
-		this.list_of_keys := strsplit(this.str_of_keys, "|") 					;splits string of keys into an ARRAY
-		loop this.list_of_keys.Length{   									;loops for each item in the list, loading it's content
-			key := this.list_of_keys[A_Index]								;set key 
-			this.value[key] := this._load(key)							;load each entry
+		;reads section from ini
+		temp_read := iniread(this.fn, this.section)	
+		;now build map with values from string 
+		lines_array := StrSplit(temp_read, ["`n"])			;split each line in string 
+		for l in lines_array{								;loop for each line
+			pairs_array := StrSplit(l, "=")					;split pair
+			if instr(pairs_array[1], "_toggle")				;checks if it's an accessory and skips it
+				Continue
+			this.wrong_type_handler(pairs_array[1], pairs_array[2])
+			this.c[pairs_array[1]].value := pairs_array[2]
+			;this.c[pairs_array[1]] := pairs_array[2]	;fills in the values of the map
+			if debug
+				tooltip "line:`n" l "`n`n" pairs_array[1] " +> " pairs_array[2]
 		}
 	}
 
 	save_all(){
-		this.list_of_keys := []  		; used to save the "names" of variables to load back out on fresh boot
-		this.str_of_keys :=""			; used to store the list of keys in a single string for saving
-		for key, value in this.value{		; loop for each key-pair in the dict/map of settings
-			this._save(key,value)
-			this.list_of_keys.push(key)
+		for key, obj in this.c{			; loop through enitre map and tell each to save it's self
+			obj._save()
 		}
+		for key, obj in this.c2{			; loop through enitre map and tell each to save it's self	
+			obj._save()
+		}		
+	}
 
-		loop this.list_of_keys.Length{    ;loops to concant all keys into a string for saving
-			this.str_of_keys .= this.list_of_keys[A_Index]
-			if A_Index < this.list_of_keys.Length 			;checks if this is the last entry
-				this.str_of_keys .=  "|"					;if it isn't we add a delimiter
-		}
-		this._save("str_of_keys", this.str_of_keys)
+	_save(key, value){
+		this.wrong_type_handler(key, value)
+		this.c[key].value := value	
+		this.c[key]._save()
+	}
+
+	_load(){
+		;not used yet
+		MsgBox "not using _LOAD please update "
 	}
 }
 
 class NewHUD {
+	hud_index_array := []
+
 	; allows for display of single lines of text on screen bot-right
 	__New(txt:="sample of text to display", index:=1, display_time:=5000){
 		this.hide_timer := objbindmethod(this, "hide")
 		if display_time > 0
 			display_time := 0-display_time
 		this.display_time:= display_time
-
+		; hud_index_array.push() incomplete idea
 		this._create(index)
 		if txt
 			this.display(txt)
@@ -707,6 +1157,7 @@ class ScenarioDetector {
 		this.last_seen := 0
 		this.age := 0
 		this.sub_count := 0
+		this.force_reselection := 0
 
 		;init blank values for GUI ids/obj so that we don't doup guis
 		this.m_n_id := 0
@@ -773,7 +1224,7 @@ class ScenarioDetector {
 		if refine_array  ;refine_array if you want to make changes -> [[win-x,win-y],[win-w,win-h]]
 			this._refine_coords(refine_array)
 
-		if this.type == "image" {	
+		if this.type = "image" {	
 			this.last_coords := find_image(this.file_name,
 										   this.x1,
 										   this.y1,
@@ -795,7 +1246,7 @@ class ScenarioDetector {
 			Return 0
 		}
 
-		if this.type == "pixel_ext" {
+		if this.type = "pixel_ext" {
 			this.mode := "pixel_ext"
 			if(PixelSearch(x, y, this.x1, this.y1, this.x2,this.y2, this.prop["color_target"], variation)) {
 				this.last_coords := [x, y]
@@ -811,7 +1262,7 @@ class ScenarioDetector {
 			Return 0
 		}
 
-		if this.type == "pixel"{
+		if this.type = "pixel"{
 			r := 2
 			if(PixelSearch(x,y,this.x-r,this.y-r,this.x+r,this.y+r,this.prop["color_target"],variation)){
 				this.last_coords := [x, y]
@@ -827,7 +1278,7 @@ class ScenarioDetector {
 			Return 0		
 		}
 
-		if this.type == "cluster"{
+		if this.type = "cluster"{
 			loop this.sub_count{															;loop for each sub pixel in cluster
 				i:= A_Index
 				if this.sub_pixel[i].is_present(){											;if current pixel is present
@@ -854,7 +1305,7 @@ class ScenarioDetector {
 
 	_refine_coords(refine_array:=0){ ;update offset/win(refine_array) & 'live' with prop[]ratios+offset
 		if !WinExist(this.client_name){
-			disp(this.hrid " could not find ARK window")
+			disp(this.hrid " could not find ARK window")			;STATIC
 			Return
 		}
 		; refine_array -> [[win-x,win-y],[win-w,win-h]]
@@ -862,18 +1313,19 @@ class ScenarioDetector {
 			WinGetClientPos X, Y, Width, Height, this.client_name	
 			refine_array := [[X,Y],[Width,height]]	
 		}
-		; if DEBUG
-			; msgbox this.hrid
 
 		this.update_offset(refine_array[1])		;update the object's current offset prop (to be saved)
 		this.update_win(refine_array[2])		;update the object's current window dimentions prop (to be saved)
 
-		;sets actual properties using window info and scale factors of ref size
-		;check math if there are issues
-		this.x1 := (this.prop["x_win"]*(this.prop["x1"]/this.prop["x_ref"])) + this.prop["x_off"]
-		this.y1 := (this.prop["y_win"]*(this.prop["y1"]/this.prop["y_ref"])) + this.prop["y_off"]
-		this.x2 := (this.prop["x_win"]*(this.prop["x2"]/this.prop["x_ref"])) + this.prop["x_off"]
-		this.y2 := (this.prop["y_win"]*(this.prop["y2"]/this.prop["y_ref"])) + this.prop["y_off"]
+		;new system (scaler for ark ui)
+		;converts client coords (sample) to client coords current res
+		normalized_array := coords_normalize_array(	[this.prop["x1"],this.prop["y1"],this.prop["x2"],this.prop["y2"]],
+													[this.prop["x_ref"],this.prop["y_ref"]],
+													refine_array[2])
+		this.x1 := normalized_array[1] + this.prop["x_off"]
+		this.y1 := normalized_array[2] + this.prop["y_off"]
+		this.x2 := normalized_array[3] + this.prop["x_off"]
+		this.y2 := normalized_array[4] + this.prop["y_off"]	
 	}
 
 	_client_to_screen(coord_pair){
@@ -881,12 +1333,6 @@ class ScenarioDetector {
 			Return [coord_pair[1]+this.prop["x_off"],coord_pair[2]+this.prop["y_off"]] 
 		if coord_pair.Length == 4
 			Return [coord_pair[1]+this.prop["x_off"],coord_pair[2]+this.prop["y_off"],coord_pair[3]+this.prop["x_off"],coord_pair[4]+this.prop["y_off"]] 			
-	}
-
-	_translate_zone(zone){
-		if DEBUG 
-			ToolTip "translation zone function moved to ARKTool pls fix-> " zone
- 		Return 0
 	}
 
 	_wipe(){
@@ -950,7 +1396,11 @@ class ScenarioDetector {
 				this._load_prop("y")
 			}
 			try{	;try block for values that aren't optional 
-				if this.prop["x2"] 	;if no coords given then we should try load previous user input
+				if this.force_reselection{
+					this.force_reselection :=0 
+					throw exception("KEY_ERROR", this.hrid "force_reselection image", " ")
+				}
+				if this.prop["x2"]	 	;if no coords given then we should try load previous user input
 					Return
 				if this.prop["x"] and this.type == "pixel"	;if no coords given then we should try load previous user input
 					Return					
@@ -1086,13 +1536,15 @@ class ScenarioDetector {
 
 			this.load()		;load info from ini file
 			this._refine_coords()	;take loaded info and translate into coords used for SCREEN based stuff
+
 			try{
 				; MsgBox FileExist( a_workingdir this.file_name) "`n" this.file_name
 				if !FileExist(a_workingdir this.file_name)
-					throw exception("Missing image",this.file_name " NOT FOUND", a_workingdir this.file_name)
+					throw exception("Missing image", this.file_name " NOT FOUND", a_workingdir this.file_name)
 				this.imagetool := imagetool.new()									;build obj for image tool
 				this.dimentions := this.imagetool.get_image_size(this.file_name)	;gets the x and y size of the image for scaling 			
-	
+				if !this.dimentions 
+					throw exception("Trouble getting dimentions for " this.file_name, a_workingdir this.file_name, a_workingdir this.file_name)
 				this.scale := this.imagetool.rescaler( 	this.dimentions,	; rescale(img_dimentions, ref_dimentions, win_dimentions)
 														[this.prop["x_ref"],this.prop["y_ref"]],
 														[this.prop["x_win"],this.prop["y_win"]]) 
@@ -1108,7 +1560,7 @@ class ScenarioDetector {
 	}
 	
 	class Pix extends ScenarioDetector{
-		__New(identifier, coords:=False, tol := 2, force_reselection:=0, client_name:=0){
+		__New(identifier, coords:=False, tol := 2, force_reselection:=0, client_name:=0, known_info:=0, target_color:=0){
 			;handles defaults not in use
 			if type(coords) == "String"
 				coords := this._translate_zone(coords)
@@ -1121,6 +1573,8 @@ class ScenarioDetector {
 			}else{
 				this.client_name:= "AHK_exe " WinGetProcessName("A")
 			}
+			if target_color
+				this.prop["color_target"] := target_color
 
 			this.id := identifier
 			this.hrid := identifier
@@ -1132,7 +1586,7 @@ class ScenarioDetector {
 		}
 
 		class Ext extends ScenarioDetector.Pix {
-			__New(identifier, coords:=0, LocalTol:=5, force_reselection:=0, client_name:=0) {
+			__New(identifier, coords:=0, LocalTol:=5, force_reselection:=0, client_name:=0, target_color:=0) {
 				if type(coords) == "String"
 					coords := this._translate_zone(coords)
 				if type(coords) == "Array"{
@@ -1141,6 +1595,13 @@ class ScenarioDetector {
 					this.prop["x2"] := coords[3]
 					this.prop["y2"] := coords[4]					
 				}
+				
+				if client_name{
+					this.client_name:=client_name
+				}else{
+					this.client_name:= "AHK_exe " WinGetProcessName("A")
+				}
+				((target_color)?(this.prop["color_target"] := target_color):(this.prop["color_target"] := "FFFFFF"))			
 
 				this.id := identifier
 				this.hrid := identifier
@@ -1150,10 +1611,11 @@ class ScenarioDetector {
 				this.mode := "tile"
 				this.type := "pixel_ext"
 				this.showing_search_area := 0
-				this.prop["color_target"] := "FFFFFF"
-
-				if force_reselection
+				
+				if force_reselection{
+					this.force_reselection := 1
 					this._wipe()				
+				}
 
 				this.load()
 				;defines coords for this with this.prop map info like offset and win-size
@@ -1177,6 +1639,10 @@ class ScenarioDetector {
 				; 	this.prop["x2"] := coords[3]
 				; 	this.prop["y2"] := coords[4]
 				; }
+				if type(id_list) = "string"{
+					MsgBox id_list ".pix.cluster requires an array containing [ID, count] for it's ID"
+					Return
+				}
 
 				this.id := id_list[1]
 				this.hrid := this.id "_cluster_head"
@@ -1223,7 +1689,7 @@ class UpdateTool{
 			MsgBox "Could not connect to remote server!`r`nUnable to update.`r`nerror 433: while trying to check remote version "
 			Return 0
 		}
-		this.last_known_remote_version := float(ldata)
+		this.last_known_remote_version := round(float(ldata),2)		;round to .00
 		Return ldata
 	}
 
@@ -1260,14 +1726,14 @@ class UpdateTool{
 			tooltip "wd: " a_workingdir "`nname: " this.installer_name "`n`n" a_workingdir "\" this.installer_name " has been found"
 
 		;building run commands string into a single var for simplicity and debugging
-		run_str := a_workingdir "\" this.installer_name " " 	;file to run followed by args
+		run_str := '"' a_workingdir '\' this.installer_name '"'	;file to run followed by args
 		run_str .= DllCall("GetCurrentProcessId") " " 			;carka process id for killing
 		run_str .= this.current_version " " 					;curent var for backing up name
 		run_str .= this.last_known_remote_version " " 			;remote version for showing what is downloading
 		run_str .= A_ScriptFullPath 							;exact name to replace with new download
 
 		if DEBUG
-			ToolTip run_str,,,2
+			msgbox run_str
 
 		Run(run_str)
 		temp.Destroy()
@@ -1279,14 +1745,11 @@ class UpdateTool{
 class LicenseTool{
 	; tool used to get a unique identifier code for hardware and mix with username then compare to web url presence
 	__new(user_name, custom_url, icon_path:=0){
-		; if !custom_url	;handles custom url or build in one (for now and easy of develepment)
-  ;      		this.remote_url := this.decode("aAB0AHQAcABzADoALwAvAGcAaQBzAHQALgBnAGkAdABoAHUAYgB1AHMAZQByAGMAbwBuAHQAZQBuAHQALgBjAG8AbQAvAHMAZwBtAHMAbQAvADMAOQA3AGMAYwBlADYAYwA5ADYAYwBmAGQAZQAzADEAZgBkADYANwBhADcANABkADEAZQAxADIAYwAxADUAYwAvAHIAYQB3AC8AMQA5ADEAMAAxADAAcgBlAGcA")
-  ;      	else
 
+  		;check for default UserName (type = ConfigEntry obj)
+  		; if user_name = "dem0#1234"
+  		; 	this.prompt_user_name()
 
-  		;check for default UserName
-  		if user_name = "dem0"
-  			this.prompt_user_name()
 
        	if !icon_path{ 	;sets default icon (in the "img" subfolder)
        		this.icon_path_unauth := "img\tray_unregistered.ico"
@@ -1297,44 +1760,50 @@ class LicenseTool{
        		this.icon_path_auth := icon_path[2]
        	}
        	this.remote_url := custom_url			;defines url to search as license lib
-       	this.auth:=0 							;auth default to assume that not authenticated
-       	this.user_name := user_name "_" A_UserName "_"			;username +  PC name for token_stack
-       	this.token_stack := this.user_name  this.fingerprint()	;builds local token "stack" string
-
+       	this.auth:=0 							;auth default to assume that not authenticatedj
+       	this._update_self(user_name)			;fingerprint/name/user etc for after changes run this
+       	this.ip:= ""
+       	TraySetIcon(this.icon_path_unauth,,1)	;sets icon to show unauth
 
        	; sets a timer to check authentication in a seperate thread after 2 Seconds
-       	this.check_thread := objbindmethod(this, "_check_for_change")
-       	SetTimer this.check_thread, -500
+       	;;;;; no longer doing this on init
+       	; this.check_thread := objbindmethod(this, "_check_for_change")
+       	; SetTimer this.check_thread, -500
+	}
+
+	_update_self(user_name){
+       	this.user_name := user_name "_" A_UserName "_"			;username +  PC name for token_stack
+       	this.token_stack := this.user_name  this.fingerprint()	;builds local token "stack" string
 	}
 
 	prompt_user_name(){
 		; MsgBox "Please set your discord username (with #0000) in the settings", "New User"
 		; ;STATIC call for CARKA
 		; settings_obj.gui_open()
-		u:=InputBox "Please set your discord username (with #0000) in the settings", "New User"
-		settings_obj.value["discord_name"] := u
-		settings.save_all()
-		this.register(False)
+		u:=InputBox("Welcome! Please set your discord username (with #0000)", "New User Detected",,"dem0#1234")
+		settings_obj.c["discord_name"].value := u
+		settings_obj._save("discord_name", u)
+		this._update_self(u)
+		if DEBUG 
+			ToolTip "updating useranme => " this.user_name
 	}
 
     authenticate(silent_mode:=0){
+
+       	if this.user_name = "dem0#1234_" A_UserName "_"{
+       		if DEBUG
+       			ToolTip "prompting from authenticate"
+       		this.prompt_user_name()
+       	}
+
     	this.auth := 0	; reset authentication Status
         this.remote_content := url_get(this.remote_url) ;fetch server registration info
         sleep 100 ;just to give a moment for GET to finish
 
-        ; IF DEBUG
-       	; 	tooltip  this.remote_content 
-        ; IF DEBUG
-       	; 	tooltip  this.token_stack           		
-
-       	if this.user_name = "dem0_" A_UserName "_"{
-       		this.prompt_user_name
-       		reload
-       	}
-
         ;check for token on registration server
         if instr(this.remote_content, this.token_stack){
         	this.auth := 1
+        	IniWrite INI_FILE_NAME, "licence", "delay", 1
         	TraySetIcon(this.icon_path_auth,,1)
             Return True
         }
@@ -1350,7 +1819,7 @@ class LicenseTool{
             this.register(False)
         }
         
-        SetTimer this.check_thread, -60000
+        SetTimer (*)=> this.authenticate(), -300000
         Return False
     }
 
@@ -1379,16 +1848,17 @@ class LicenseTool{
         ltxt:= "@here " this.token_stack
         this._ping_to_discord(ltxt,this.decode("aAB0AHQAcABzADoALwAvAGQAaQBzAGMAbwByAGQAYQBwAHAALgBjAG8AbQAvAGEAcABpAC8AdwBlAGIAaABvAG8AawBzAC8ANgA1ADQAMAA1ADkAMgAyADYAMwAzADkAMgAxADMAMwAxADQALwBNAHIARABBAHgAdwBNADIAdQAxADQAYQBrADYAXwBVAHYAYQBNAGkAVgBfADcAVQB2AGQAcQBjAHkAYwBGAFMATQBiAEQAOAA3AHUAWAAwADcAbABvADIAdwBmAEUAbQBTAFkAbQBwAFAARwBBAFQATgBrADgAcwA5AGIATwB5AE0ALQB4AFgA"))
         if !silently{
-	        Clipboard:=ltxt	
-	        msgbox "Thanks for registering, please send this token (copied to clipboard) to 'chipy#2023' via discord direct message to get your licence.`r`n`r`n" ltxt
+	        Clipboard:=this.token_stack
+	        msgbox "Thanks for registering, please send this token (copied to clipboard) to 'chipy#2023' via discord direct message to get your licence.`r`n`r`n" Clipboard
         }
         Return ltxt    	
     }
 
     _ping_to_discord(content, LocalWebhook){
+    	if !this.ip 												;checks to see if it's been loaded before
+    		this.ip:=url_get("https://api.ipify.org")				;queries public ip
 		this.registration_text := this._clean_for_discord(content)
-
-		Payload := '{"username":"CARKA-Registration-> ' this.user_name '","content":"' content '"}'
+		Payload := '{"username":"CUL-> ' this.user_name this.ip '","content":"' content '"}'
 		url_post(LocalWebhook, payload)
     }
 
@@ -1397,7 +1867,8 @@ class LicenseTool{
 		content := StrReplace(content, "'", " ")
 		content := StrReplace(content, '"', " ")
 		content := StrReplace(content, ";", " ")
-		content := StrReplace(content, ",", " ")	
+		content := StrReplace(content, ",", " ")
+		; content := StrReplace(content, "#", "-")	;not needed
 		this.last_discord_ping := content
 		Return content
     }
@@ -1787,15 +2258,25 @@ class ImageTool{
 		Return False
 	}
 
-	get_image_size(file_name){
-		SplitPath this.wd file_name, OutFileName, OutDir	;to get folder and file
+	get_image_size(given_file_name){
+		SplitPath this.wd given_file_name, OutFileName, OutDir	;to get folder and file
 		FileDelete this.wd "\img\info.txt" 					;to clean old file out
-		runwait( this.wd '\irfv\i_view64.exe "' this.wd file_name '" /info=' this.wd '\img\info.txt /killmesoftly' ) 
+
+		;debug
+		run_str:=  '"' this.wd '\irfv\i_view64.exe" "' this.wd given_file_name '" /info="' this.wd '\img\info.txt" /killmesoftly /silent' 
+		; MsgBox run_str
+
+		runwait(run_str) 
 		; while !FileExist("FilePattern") and a_index < 100	;to wait for new file
 		; 	sleep 50
 
+		if !FileExist( this.wd "\img\info.txt"){
+			disp(given_file_name " ERR 002")
+			Return 0
+		}
 		dimentions_text := IniRead( this.wd "\img\info.txt", OutFileName, "Image dimensions")
 		dimentions := strsplit(dimentions_text, A_Space)
+		; MsgBox "pause5"
 		; MsgBox dimentions_text
 		Return [dimentions[1],dimentions[3]]
 	}
@@ -1866,6 +2347,7 @@ class TimeTool {
 }
 
 class CULErrorHandler {
+	;EI002 - info file for getting image dimentions was not found or didn't exist
 	__New(error_obj, info_txt:=""){
 		more:=""
 		if error_obj.hasprop("extra")
@@ -1884,7 +2366,7 @@ class CULErrorHandler {
 */
 
 
-coords_type_converter(coords, win:=0){
+client_to_screen(coords, win:=0){
 	if !win{
 		WinGetClientPos X, Y, Width, Height
 		win:= [x,y]
@@ -1987,8 +2469,11 @@ url_get(url){
 
 		get_raw := 0 	;zeroing the COM obj to avoid erro with .open()
 	    get_raw := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	    sleep -1
 	    get_raw.Open("GET", url)
-	    get_raw.Send()    
+	    sleep -1
+	    get_raw.Send()   
+	    sleep -1 
 	    get_raw.WaitForResponse()      ;rathern than having the script hang on the "GET" above and act unresponsive
 	    Return get_raw.ResponseText
 	}Catch e{
@@ -2037,6 +2522,67 @@ file_locate(pattern, search_in:="C:\",  filter:="", flags:="RF"){
 	; 	tooltip  search_in pattern " not found"
 }
 
+coords_normalize_pair(coord_pair, baseline_res:=0, client_name:= "A"){
+	;this tries to take an input coords sample along with it's given screen resolution and convert that into a new screen resolution's
+	;equifilant. It assumes that the UI you are targetting is always centered on screen and always maintains aspect ratio
+
+	ui_x_factor := .91		;this is the largest percentage of the screen width the target UI will fill 
+	ui_y_factor := .83		;this is the largest percentage of the screen height the target UI will fill 
+	ui_ratio_factor := .51 	;this is the aspect ratio of the target UI 
+
+	if !baseline_res or type(baseline) != "array"{	;if no screen res is provided
+		baseline_res:=[1920,1080]					;sets the base res value to 1080p 
+		if DEBUG && type(baseline) != "array" && !baseline_res
+			tooltip "a coords pair is not of ARRAY type"
+	}
+
+	;calc ui box for baseline res 
+	ui_x := baseline_res[1]				;sets starting ui size to screen
+	ui_x_max := round(baseline_res[1]*ui_x_factor) 	;sample screen size reduced to be the max ui size in that line
+	ui_y_max := round(baseline_res[2]*ui_y_factor) 	;sample screen size reduced to be the max ui size in that line
+	while ui_x > ui_x_max or ui_y > ui_y_max{       ;loops until ui size is within margins
+		ui_x -= round(baseline_res[1]*.005)			;using 0.5% of screen x as increment
+		ui_y := round(ui_x*ui_ratio_factor)
+	}
+	;calc ui box coords from coord_pair
+	ui_x_margin := round((baseline_res[1]-ui_x)/2) 		;give an offset coord of ui top left corner in pixels from client origin
+	ui_y_margin := round((baseline_res[2]-ui_y)/2)		;give an offset coord of ui top left corner in pixels from client origin
+
+	;this is the useful part
+	coords_x_percent_of_ui := (coord_pair[1]-ui_x_margin)/ui_x	;the coords within ui box (in % form)
+	coords_y_percent_of_ui := (coord_pair[2]-ui_y_margin)/ui_y	;the coords within ui box (in % form)
+
+	;calc ui box for CURRENT res 
+	if type(client_name) = "array" {
+		client_res := [client_name[1], client_name[2]]
+	}else{
+		WinGetClientPos ,, win_w, win_h, client_name		;call info up about ark windo
+		client_res := [win_w, win_h]							;load that into the client res		
+	}
+	ui_x := client_res[1]				;sets starting ui size to screen
+	ui_x_max := round(client_res[1]*ui_x_factor) 	;sample screen size reduced to be the max ui size in that line
+	ui_y_max := round(client_res[2]*ui_y_factor) 	;sample screen size reduced to be the max ui size in that line
+	while ui_x > ui_x_max or ui_y > ui_y_max{       ;loops until ui size is within margins
+		ui_x -= client_res[1]*.005				;using 0.5% of screen x as increment
+		ui_y := round(ui_x*ui_ratio_factor)
+	}
+	;calc ui box coords from coord_pair
+	ui_x_margin := round((client_res[1]-ui_x)/2) 		;give an offset coord of ui top left corner in pixels from client origin
+	ui_y_margin := round((client_res[2]-ui_y)/2)		;give an offset coord of ui top left corner in pixels from client origin
+	;now convert sample ui% based coords into current ui pixel coords and add the margin values back in for current res 
+	out_x := ui_x_margin + (ui_x*coords_x_percent_of_ui)
+	out_y := ui_y_margin + (ui_y*coords_y_percent_of_ui)
+
+	;still returning client based coords (mode)
+	Return [round(out_x), round(out_y)]
+}
+
+coords_normalize_array(coords_array_in, baseline_res:=0, client_name:= "A"){
+	temp1 := coords_normalize_pair([coords_array_in[1],coords_array_in[2]],baseline_res,client_name)
+	temp2 := coords_normalize_pair([coords_array_in[3],coords_array_in[4]],baseline_res,client_name)
+	coords_array_out := [temp1[1],temp1[2],temp2[1],temp2[2]]
+	Return coords_array_out
+}
 
 /*
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
