@@ -1,3 +1,6 @@
+;constructed for AHKv2 Alpha (2.0-a106-4a6b3ff1)
+;should be able to find it in (autohotkey.com/download/2.0/)
+
 global ROAMING := A_AppData "\ChipysUtilityLibrary"
 global INI_FILE_NAME := "config.ini"
 global DEPS := DependencyManager.new()
